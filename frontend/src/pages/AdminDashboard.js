@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import API from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { PageLoader } from '../components/ui/SkeletonLoader';
 import PageWrapper from '../components/ui/PageWrapper';
 import toast from 'react-hot-toast';
 
 const AdminDashboard = () => {
+  const { user: currentUser } = useAuth();
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     fetchAdminData();
@@ -31,6 +34,25 @@ const AdminDashboard = () => {
       toast.error('Failed to load admin data. Are you an admin?');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId, userName) => {
+    if (window.confirm(`Are you sure you want to delete user ${userName}? This action cannot be undone.`)) {
+      setDeletingId(userId);
+      const loadingToast = toast.loading(`Deleting ${userName}...`);
+      try {
+        const { data } = await API.delete(`/admin/users/${userId}`);
+        if (data.success) {
+          toast.success(data.message || 'User deleted successfully', { id: loadingToast });
+          // Fetch updated stats and users list without resetting the whole page loading state
+          fetchAdminData();
+        }
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'Failed to delete user', { id: loadingToast });
+      } finally {
+        setDeletingId(null);
+      }
     }
   };
 
@@ -115,6 +137,7 @@ const AdminDashboard = () => {
                     <th className="py-4 px-6 sm:px-8 font-bold text-zinc-500 uppercase text-[10px] tracking-widest">Email</th>
                     <th className="py-4 px-6 sm:px-8 font-bold text-zinc-500 uppercase text-[10px] tracking-widest">Role</th>
                     <th className="py-4 px-6 sm:px-8 font-bold text-zinc-500 uppercase text-[10px] tracking-widest">Joined</th>
+                    <th className="py-4 px-6 sm:px-8 font-bold text-zinc-500 uppercase text-[10px] tracking-widest text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.03]">
@@ -149,11 +172,30 @@ const AdminDashboard = () => {
                           day: 'numeric', month: 'short', year: 'numeric'
                         })}
                       </td>
+                      <td className="py-4 px-6 sm:px-8 text-right">
+                        {u._id !== currentUser?._id && (
+                          <button
+                            onClick={() => handleDeleteUser(u._id, u.name)}
+                            disabled={deletingId === u._id}
+                            title="Delete User"
+                            className="w-8 h-8 rounded-full flex items-center justify-center bg-zinc-800 border border-white/5 text-zinc-500 hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
+                          >
+                            {deletingId === u._id ? (
+                              <svg className="animate-spin h-3.5 w-3.5 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            ) : (
+                              <span className="text-[10px]">🗑️</span>
+                            )}
+                          </button>
+                        )}
+                      </td>
                     </motion.tr>
                   ))}
                   {users.length === 0 && (
                     <tr>
-                      <td colSpan="4" className="py-16 px-8 text-center">
+                      <td colSpan="5" className="py-16 px-8 text-center">
                         <motion.div
                           animate={{ y: [0, -6, 0] }}
                           transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}

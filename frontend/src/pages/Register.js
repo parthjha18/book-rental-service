@@ -16,7 +16,6 @@ const Register = () => {
   });
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [coordinates,     setCoordinates]     = useState(null);
-  // eslint-disable-next-line no-unused-vars
   const [otpSent,         setOtpSent]         = useState(false);
   const [sendingOtp,      setSendingOtp]       = useState(false);
   const [loading,         setLoading]          = useState(false);
@@ -44,7 +43,11 @@ const Register = () => {
     setSendingOtp(true);
     try {
       const { data } = await API.post('/auth/send-otp', { phone: formData.phone, email: formData.email });
-      if (data.success) { setOtpSent(true); setStep(2); toast.success(data.message); }
+      if (data.success) {
+        setOtpSent(true);
+        setStep(2);
+        toast.success(data.message);
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to send OTP');
     } finally {
@@ -65,13 +68,13 @@ const Register = () => {
     if (result.success) navigate('/dashboard');
   };
 
-  const inputCls = "input-premium";
   const labelCls = "block text-xs font-semibold text-zinc-400 mb-2 uppercase tracking-widest";
+  const inputCls = "input-premium";
 
   return (
     <PageWrapper>
       <div className="min-h-screen bg-black flex items-center justify-center px-4 py-16 relative overflow-hidden">
-
+        
         {/* Glows */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-orange-500/5 rounded-full blur-[120px]" />
@@ -115,8 +118,6 @@ const Register = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-
-              {/* Step 0 – Account details */}
               <AnimatePresence mode="wait">
                 {step === 0 && (
                   <motion.div
@@ -162,7 +163,6 @@ const Register = () => {
                   </motion.div>
                 )}
 
-                {/* Step 1 – Location */}
                 {step === 1 && (
                   <motion.div
                     key="step1"
@@ -188,7 +188,6 @@ const Register = () => {
                       <input type="text" name="address" value={formData.address} onChange={handleChange} required placeholder="Street address" className={inputCls} />
                     </div>
 
-                    {/* Location button */}
                     <motion.button
                       type="button"
                       onClick={handleGetLocation}
@@ -231,7 +230,6 @@ const Register = () => {
                   </motion.div>
                 )}
 
-                {/* Step 2 – Verify OTP */}
                 {step === 2 && (
                   <motion.div
                     key="step2"
@@ -242,7 +240,7 @@ const Register = () => {
                     className="space-y-4"
                   >
                     <div className="p-4 bg-orange-500/8 border border-orange-500/20 rounded-xl text-sm text-orange-300 text-center">
-                      📱 A 6-digit OTP has been sent to <strong className="text-orange-400">{formData.phone}</strong>
+                      📧 A 6-digit OTP has been sent to your email: <strong className="text-orange-400">{formData.email}</strong>
                     </div>
                     <div>
                       <label className={labelCls}>Enter OTP</label>

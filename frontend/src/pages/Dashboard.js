@@ -12,20 +12,43 @@ const Dashboard = () => {
   useAuth();
   const [showAddBook, setShowAddBook] = useState(false);
   const [formData, setFormData] = useState({
-    title: '', author: '', description: '', price: '', genre: '', condition: 'Good', coverImage: '',
+    title: '', author: '', description: '', price: '', genre: '', condition: 'Good'
   });
+  const [coverImage, setCoverImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCoverImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
+
+    const dataToSend = new FormData();
+    Object.keys(formData).forEach(key => dataToSend.append(key, formData[key]));
+    if (coverImage) {
+      dataToSend.append('coverImage', coverImage);
+    }
+
     try {
-      const { data } = await API.post('/books', formData);
+      const { data } = await API.post('/books', dataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
       if (data.success) {
         toast.success(data.message);
-        setFormData({ title: '', author: '', description: '', price: '', genre: '', condition: 'Good', coverImage: '' });
+        setFormData({ title: '', author: '', description: '', price: '', genre: '', condition: 'Good' });
+        setCoverImage(null);
+        setImagePreview(null);
         setShowAddBook(false);
       }
     } catch (error) {
@@ -169,8 +192,14 @@ const Dashboard = () => {
                         </div>
                       </div>
                       <div>
-                        <label className={labelCls}>Cover Image URL</label>
-                        <input type="url" name="coverImage" value={formData.coverImage} onChange={handleChange} placeholder="https://..." className={inputCls} />
+                        <label className={labelCls}>Cover Image</label>
+                        <input 
+                          type="file" 
+                          name="coverImage" 
+                          accept="image/*" 
+                          onChange={handleFileChange} 
+                          className={inputCls + " file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-orange-500/10 file:text-orange-400 hover:file:bg-orange-500/20"} 
+                        />
                       </div>
                     </div>
                     <div>
@@ -179,13 +208,13 @@ const Dashboard = () => {
                     </div>
 
                     {/* Preview */}
-                    {formData.coverImage && (
+                    {imagePreview && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         className="flex items-center gap-4 p-4 bg-zinc-900/50 rounded-xl border border-white/5"
                       >
-                        <img src={formData.coverImage} alt="Preview" className="w-16 h-20 object-cover rounded-lg" onError={(e) => e.target.style.display = 'none'} />
+                        <img src={imagePreview} alt="Preview" className="w-16 h-20 object-cover rounded-lg" />
                         <div>
                           <p className="text-xs text-zinc-500">Cover Preview</p>
                           <p className="text-sm font-medium text-white">{formData.title || 'Book Title'}</p>

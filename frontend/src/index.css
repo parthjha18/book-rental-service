@@ -247,3 +247,8 @@ body::before {
 .count-up {
   animation: countUp 0.6s ease-out forwards;
 }
+
+/* ── Hide reCAPTCHA Badge (Requires Disclaimer) ────────────────────────── */
+.grecaptcha-badge { 
+  visibility: hidden; 
+}
