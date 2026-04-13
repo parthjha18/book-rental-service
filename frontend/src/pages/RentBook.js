@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import API from '../services/api';
 import { formatCurrency, calculateRentalDetails, loadRazorpayScript } from '../utils/helpers';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import PageWrapper from '../components/ui/PageWrapper';
+import { PageLoader } from '../components/ui/SkeletonLoader';
 
 const RentBook = () => {
   const { id } = useParams();
@@ -121,7 +124,7 @@ const RentBook = () => {
           contact: user.phone,
         },
         theme: {
-          color: '#2563eb',
+          color: '#f97316',
         },
       };
 
@@ -140,111 +143,239 @@ const RentBook = () => {
   };
 
   if (!book || !rentalDetails) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <p className="text-xl">Loading...</p>
-      </div>
-    );
+    return <PageLoader message="Loading book details..." />;
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="md:flex">
-          <div className="md:w-1/3">
-            <img
-              src={book.coverImage}
-              alt={book.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
+    <PageWrapper>
+      <div className="min-h-screen bg-black text-white">
+        <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-5xl">
 
-          <div className="md:w-2/3 p-8">
-            <h1 className="text-3xl font-bold mb-2">{book.title}</h1>
-            <p className="text-xl text-gray-600 mb-4">by {book.author}</p>
+          {/* Back button */}
+          <motion.button
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-zinc-400 hover:text-white text-sm font-medium mb-8 group transition-colors"
+          >
+            <span className="group-hover:-translate-x-1 transition-transform">←</span>
+            Back to search
+          </motion.button>
 
-            <div className="mb-6">
-              <p className="text-gray-700 mb-2">{book.description}</p>
-              <p className="text-sm text-gray-500">Genre: {book.genre}</p>
-              <p className="text-sm text-gray-500">Condition: {book.condition}</p>
-              <p className="text-lg font-semibold mt-2">
-                Book Value: {formatCurrency(book.price)}
-              </p>
-            </div>
+          <div className="flex flex-col lg:flex-row gap-8">
 
-            {book.owner && (
-              <div className="mb-6 p-4 bg-gray-50 rounded">
-                <h3 className="font-semibold mb-2">Book Owner</h3>
-                <p className="text-sm">Name: {book.owner.name}</p>
-                <p className="text-sm">Phone: {book.owner.phone}</p>
-                <p className="text-sm">Location: {book.owner.location.address}, {book.owner.location.city}</p>
-              </div>
-            )}
+            {/* Left — Book Details */}
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              className="lg:w-2/5"
+            >
+              {/* Book Cover */}
+              <div className="relative group overflow-hidden rounded-2xl mb-6">
+                <img
+                  src={book.coverImage || 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=600&auto=format&fit=crop'}
+                  alt={book.title}
+                  className="w-full h-72 sm:h-96 object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-            <div className="mb-6">
-              <label className="block text-sm font-medium mb-2">
-                Rental Duration (weeks)
-              </label>
-              <input
-                type="number"
-                value={weeks}
-                onChange={(e) => setWeeks(parseInt(e.target.value) || 1)}
-                min="1"
-                max="12"
-                className="w-32 px-3 py-2 border border-gray-300 rounded"
-              />
-            </div>
-
-            <div className="mb-6 p-4 bg-blue-50 rounded">
-              <h3 className="font-semibold mb-3">Rental Details</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>Weekly Rent:</span>
-                  <span>{formatCurrency(rentalDetails.weeklyRent)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Duration:</span>
-                  <span>{rentalDetails.weeks} week(s)</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Total Rent:</span>
-                  <span>{formatCurrency(rentalDetails.totalRent)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Security Deposit (20%):</span>
-                  <span>{formatCurrency(rentalDetails.securityDeposit)}</span>
-                </div>
-                <div className="flex justify-between font-bold text-lg pt-2 border-t">
-                  <span>Total Amount:</span>
-                  <span className="text-blue-600">
-                    {formatCurrency(rentalDetails.totalAmount)}
+                {/* Floating badges */}
+                <div className="absolute top-4 left-4 flex gap-2">
+                  {book.genre && (
+                    <span className="text-[11px] px-3 py-1 rounded-full bg-black/50 backdrop-blur-sm text-zinc-200 border border-white/10 font-medium">
+                      {book.genre}
+                    </span>
+                  )}
+                  <span className="text-[11px] px-3 py-1 rounded-full bg-black/50 backdrop-blur-sm text-zinc-200 border border-white/10 font-medium">
+                    {book.condition}
                   </span>
                 </div>
+
+                {/* Availability */}
+                <div className="absolute top-4 right-4">
+                  <span className={`text-[11px] px-3 py-1 rounded-full font-semibold backdrop-blur-sm ${
+                    book.isAvailable ? 'badge-green' : 'badge-red'
+                  }`}>
+                    {book.isAvailable ? '● Available' : '● Rented'}
+                  </span>
+                </div>
+
+                {/* Title overlay */}
+                <div className="absolute bottom-6 left-6 right-6">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight mb-1">{book.title}</h1>
+                  <p className="text-zinc-300 text-sm">by {book.author}</p>
+                </div>
               </div>
-            </div>
 
-            <div className="mb-6 p-4 bg-yellow-50 rounded">
-              <h4 className="font-semibold mb-2 text-sm">Important Notes:</h4>
-              <ul className="text-xs text-gray-700 space-y-1 list-disc list-inside">
-                <li>Payment includes security deposit (refundable)</li>
-                <li>Meet with the owner in person to exchange the book</li>
-                <li>Both parties must confirm the exchange</li>
-                <li>Return the book on time to avoid penalties</li>
-                <li>Security deposit will be refunded after successful return</li>
-              </ul>
-            </div>
+              {/* Description */}
+              <div className="glass rounded-2xl p-6 mb-4">
+                <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">About this book</h3>
+                <p className="text-zinc-400 text-sm leading-relaxed">{book.description}</p>
+              </div>
 
-            <button
-              onClick={handlePayment}
-              disabled={processing || !book.isAvailable}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              {/* Owner Card */}
+              {book.owner && (
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="glass rounded-2xl p-6"
+                >
+                  <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">Book Owner</h3>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center text-lg font-bold text-orange-400 flex-shrink-0">
+                      {book.owner.name?.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-white text-sm">{book.owner.name}</p>
+                      <p className="text-xs text-zinc-500">{book.owner.phone}</p>
+                      <p className="text-xs text-zinc-500 mt-0.5">
+                        📍 {book.owner.location?.address}, {book.owner.location?.city}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </motion.div>
+
+            {/* Right — Rental Config */}
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+              className="lg:w-3/5 flex flex-col gap-6"
             >
-              {processing ? 'Processing...' : `Pay ${formatCurrency(rentalDetails.totalAmount)} & Rent Book`}
-            </button>
+              {/* Duration picker */}
+              <div className="glass rounded-2xl p-6">
+                <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">Rental Duration</h3>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center bg-zinc-900 rounded-xl border border-white/8 overflow-hidden">
+                    <button
+                      onClick={() => setWeeks(Math.max(1, weeks - 1))}
+                      className="px-4 py-3 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors text-lg font-medium"
+                    >
+                      −
+                    </button>
+                    <div className="px-6 py-3 text-center min-w-[80px]">
+                      <span className="text-2xl font-bold text-white">{weeks}</span>
+                    </div>
+                    <button
+                      onClick={() => setWeeks(Math.min(12, weeks + 1))}
+                      className="px-4 py-3 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors text-lg font-medium"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <span className="text-zinc-500 text-sm font-medium">week{weeks !== 1 ? 's' : ''}</span>
+                </div>
+
+                {/* Quick duration buttons */}
+                <div className="flex gap-2 mt-4 flex-wrap">
+                  {[1, 2, 4, 8, 12].map((w) => (
+                    <button
+                      key={w}
+                      onClick={() => setWeeks(w)}
+                      className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all border ${
+                        weeks === w
+                          ? 'bg-orange-500/15 border-orange-500/30 text-orange-400'
+                          : 'bg-zinc-900/50 border-white/5 text-zinc-500 hover:border-white/10 hover:text-zinc-300'
+                      }`}
+                    >
+                      {w}w
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Price breakdown */}
+              <div className="glass rounded-2xl p-6">
+                <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-5">Price Breakdown</h3>
+                <div className="space-y-4">
+                  {[
+                    { label: 'Weekly Rent', value: formatCurrency(rentalDetails.weeklyRent) },
+                    { label: 'Duration', value: `${rentalDetails.weeks} week${rentalDetails.weeks !== 1 ? 's' : ''}` },
+                    { label: 'Total Rent', value: formatCurrency(rentalDetails.totalRent) },
+                    { label: 'Security Deposit (20%)', value: formatCurrency(rentalDetails.securityDeposit), note: 'Refundable' },
+                  ].map(({ label, value, note }) => (
+                    <div key={label} className="flex justify-between items-center">
+                      <span className="text-sm text-zinc-400">
+                        {label}
+                        {note && <span className="ml-2 text-[10px] text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">{note}</span>}
+                      </span>
+                      <span className="text-sm font-semibold text-white">{value}</span>
+                    </div>
+                  ))}
+
+                  <div className="section-divider my-2" />
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-base font-bold text-white">Total Amount</span>
+                    <motion.span
+                      key={rentalDetails.totalAmount}
+                      initial={{ scale: 1.1, color: '#f97316' }}
+                      animate={{ scale: 1, color: '#fb923c' }}
+                      className="text-2xl font-bold text-orange-400"
+                    >
+                      {formatCurrency(rentalDetails.totalAmount)}
+                    </motion.span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Important notes */}
+              <div className="rounded-2xl p-5 bg-amber-500/5 border border-amber-500/15">
+                <h4 className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <span>⚠️</span> Important Notes
+                </h4>
+                <ul className="text-xs text-zinc-400 space-y-2 leading-relaxed">
+                  {[
+                    'Payment includes security deposit (refundable on return)',
+                    'Meet with the owner in person to exchange the book',
+                    'Both parties must confirm the exchange',
+                    'Return the book on time to avoid penalties',
+                    'Security deposit will be refunded after successful return',
+                  ].map((note, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="text-amber-500/50 mt-0.5 text-[10px]">●</span>
+                      {note}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Payment button */}
+              <motion.button
+                onClick={handlePayment}
+                disabled={processing || !book.isAvailable}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-2xl font-bold text-base
+                           hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg shadow-orange-500/25
+                           disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none relative overflow-hidden"
+              >
+                {processing ? (
+                  <span className="flex items-center justify-center gap-3">
+                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Processing Payment…
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    🔐 Pay {formatCurrency(rentalDetails.totalAmount)} & Rent Book
+                  </span>
+                )}
+              </motion.button>
+
+              {/* Security badge */}
+              <div className="flex items-center justify-center gap-2 text-xs text-zinc-600">
+                <span>🔒</span>
+                <span>Secured by Razorpay · 256-bit encryption</span>
+              </div>
+            </motion.div>
           </div>
         </div>
       </div>
-    </div>
+    </PageWrapper>
   );
 };
 

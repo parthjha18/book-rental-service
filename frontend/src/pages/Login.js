@@ -1,84 +1,101 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-
-const inputClass = "w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all";
+import PageWrapper from '../components/ui/PageWrapper';
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
-  const { login } = useAuth();
-  const navigate = useNavigate();
+  const [loading, setLoading]   = useState(false);
+  const { login }  = useAuth();
+  const navigate   = useNavigate();
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     const result = await login(formData);
+    setLoading(false);
     if (result.success) navigate('/dashboard');
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-4 py-16">
-      {/* Background glow */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
-      </div>
+    <PageWrapper>
+      <div className="min-h-screen bg-black flex items-center justify-center px-4 py-16 relative overflow-hidden">
 
-      <div className="relative w-full max-w-md">
-        {/* Card */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8 shadow-2xl">
-          <div className="text-center mb-8">
-            <Link to="/" className="inline-block text-2xl font-bold mb-4">
-              📚 Book<span className="text-orange-400">Share</span>
-            </Link>
-            <h1 className="text-3xl font-bold text-white">Welcome back</h1>
-            <p className="text-zinc-400 mt-2 text-sm">Sign in to continue reading</p>
-          </div>
+        {/* Background glows */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-orange-500/6 rounded-full blur-[100px]" />
+          <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-amber-500/5 rounded-full blur-[80px]" />
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-2">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                placeholder="you@example.com"
-                className={inputClass}
-              />
+        <div className="relative w-full max-w-md">
+          {/* Floating card */}
+          <motion.div
+            initial={{ opacity: 0, y: 24, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            className="glass rounded-3xl p-8 shadow-2xl shadow-black/60 border border-white/8"
+          >
+            {/* Header */}
+            <div className="text-center mb-8">
+              <Link to="/" className="inline-flex items-center gap-2 mb-5">
+                <div className="w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center text-lg shadow-lg shadow-orange-500/30">📚</div>
+                <span className="text-xl font-bold">Book<span className="gradient-text">Share</span></span>
+              </Link>
+              <h1 className="text-2xl font-bold text-white">Welcome back</h1>
+              <p className="text-zinc-500 mt-1 text-sm">Sign in to continue reading</p>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-2">Password</label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                placeholder="••••••••"
-                className={inputClass}
-              />
-            </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {[
+                { name: 'email',    type: 'email',    label: 'Email',    placeholder: 'you@example.com' },
+                { name: 'password', type: 'password', label: 'Password', placeholder: '••••••••' },
+              ].map(({ name, type, label, placeholder }) => (
+                <div key={name}>
+                  <label className="block text-xs font-semibold text-zinc-400 mb-2 uppercase tracking-widest">{label}</label>
+                  <input
+                    type={type}
+                    name={name}
+                    value={formData[name]}
+                    onChange={handleChange}
+                    required
+                    placeholder={placeholder}
+                    className="input-premium"
+                  />
+                </div>
+              ))}
 
-            <button
-              type="submit"
-              className="w-full bg-white text-black py-3 rounded-xl font-semibold hover:bg-zinc-200 transition-colors mt-2"
-            >
-              Sign In →
-            </button>
-          </form>
+              <motion.button
+                type="submit"
+                disabled={loading}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full mt-2 py-3 bg-white text-black rounded-xl font-bold text-sm
+                           hover:bg-orange-50 transition-colors shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                    Signing in…
+                  </span>
+                ) : (
+                  'Sign In →'
+                )}
+              </motion.button>
+            </form>
 
-          <p className="text-center mt-6 text-sm text-zinc-500">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-orange-400 hover:text-orange-300 font-medium transition-colors">
-              Create one
-            </Link>
-          </p>
+            <p className="text-center mt-6 text-sm text-zinc-600">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-orange-400 hover:text-orange-300 font-semibold transition-colors">
+                Create one
+              </Link>
+            </p>
+          </motion.div>
         </div>
       </div>
-    </div>
+    </PageWrapper>
   );
 };
 
