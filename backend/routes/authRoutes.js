@@ -60,12 +60,42 @@ router.post('/send-otp', async (req, res) => {
       { upsert: true, new: true }
     );
 
-    // TODO: Integrate actual SMS service like Twilio or Fast2SMS here.
-    // For local development, we'll log the OTP to the console.
-    console.log(`\n\n💬 ============================`);
-    console.log(`📱 MOCK SMS TO ${phone}`);
-    console.log(`🔑 YOUR VERIFICATION OTP IS: ${otp}`);
-    console.log(`============================\n\n`);
+    // 🚀 Actual SMS Provider Integration
+    // It will automatically use whichever provider's API key is found in your .env file
+    
+    if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+      // Option 1: Twilio
+      const twilio = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+      await twilio.messages.create({
+        body: `Your BookShare login OTP is: ${otp}`,
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: phone
+      });
+      console.log(`✅ Actual SMS sent to ${phone} via Twilio`);
+      
+    } else if (process.env.FAST2SMS_API_KEY) {
+      // Option 2: Fast2SMS (Popular & Cheap in India)
+      const axios = require('axios');
+      // Clean up phone number: remove +91 and spaces for Fast2SMS
+      const cleanPhone = phone.replace('+91', '').replace(/\s+/g, '');
+      await axios.get('https://www.fast2sms.com/dev/bulkV2', {
+        params: {
+          authorization: process.env.FAST2SMS_API_KEY,
+          variables_values: otp,
+          route: 'otp',
+          numbers: cleanPhone
+        }
+      });
+      console.log(`✅ Actual SMS sent to ${phone} via Fast2SMS`);
+      
+    } else {
+      // Fallback for Local Development
+      console.log(`\n\n💬 ============================`);
+      console.log(`📱 MOCK SMS TO ${phone}`);
+      console.log(`🔑 YOUR VERIFICATION OTP IS: ${otp}`);
+      console.log(`============================\n\n`);
+      console.log(`⚠️ Note: No Twilio or Fast2SMS API keys found in .env. Mocking SMS.`);
+    }
 
     res.status(200).json({ success: true, message: 'OTP sent successfully. Check your terminal/messages.' });
   } catch (error) {
