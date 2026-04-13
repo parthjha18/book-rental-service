@@ -4,6 +4,7 @@ import API from '../services/api';
 import { formatCurrency, formatDate } from '../utils/helpers';
 import EmptyState from '../components/ui/EmptyState';
 import PageWrapper from '../components/ui/PageWrapper';
+import BorderGlow from '../components/ui/BorderGlow';
 import toast from 'react-hot-toast';
 
 const statusConfig = {
@@ -70,98 +71,105 @@ const MyRentals = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: i * 0.06, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-        className="glass rounded-2xl p-6 mb-4 hover:border-white/10 transition-all duration-300 card-hover"
+        className="mb-4"
       >
-        <div className="flex gap-5 mb-5">
-          {/* Book cover */}
-          <div className="relative flex-shrink-0 overflow-hidden rounded-xl">
-            <img
-              src={t.book.coverImage || 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=200&auto=format&fit=crop'}
-              alt={t.book.title}
-              className="w-20 h-28 object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-          </div>
+        <BorderGlow
+          className="rounded-2xl p-6 transition-all duration-300 card-hover"
+          glowColor="30 90 60"
+          colors={['#f97316', '#f59e0b', '#fbbf24']}
+          backgroundColor="#09090b"
+        >
+          <div className="flex gap-5 mb-5">
+            {/* Book cover */}
+            <div className="relative flex-shrink-0 overflow-hidden rounded-xl">
+              <img
+                src={t.book.coverImage || 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=200&auto=format&fit=crop'}
+                alt={t.book.title}
+                className="w-20 h-28 object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+            </div>
 
-          <div className="flex-1 min-w-0">
-            <div className="flex justify-between items-start gap-3">
-              <div>
-                <h3 className="font-bold text-lg text-white leading-tight">{t.book.title}</h3>
-                <p className="text-zinc-400 text-sm mt-0.5">{t.book.author}</p>
-                <p className="text-zinc-500 text-sm mt-2">
-                  {isOwner ? 'Rented to' : 'Rented from'}:{' '}
-                  <span className="text-white font-medium">{other?.name}</span>
-                  {other?.phone && <span className="text-zinc-600"> · {other.phone}</span>}
-                </p>
-              </div>
-              <div className="text-right flex-shrink-0">
-                <span className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border font-semibold ${status.cls}`}>
-                  <span>{status.icon}</span> {status.label}
-                </span>
-                <p className="text-xl font-bold text-orange-400 mt-2">{formatCurrency(t.totalAmount)}</p>
+            <div className="flex-1 min-w-0">
+              <div className="flex justify-between items-start gap-3">
+                <div>
+                  <h3 className="font-bold text-lg text-white leading-tight">{t.book.title}</h3>
+                  <p className="text-zinc-400 text-sm mt-0.5">{t.book.author}</p>
+                  <p className="text-zinc-500 text-sm mt-2">
+                    {isOwner ? 'Rented to' : 'Rented from'}:{' '}
+                    <span className="text-white font-medium">{other?.name}</span>
+                    {other?.phone && <span className="text-zinc-600"> · {other.phone}</span>}
+                  </p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <span className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border font-semibold ${status.cls}`}>
+                    <span>{status.icon}</span> {status.label}
+                  </span>
+                  <p className="text-xl font-bold text-orange-400 mt-2">{formatCurrency(t.totalAmount)}</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Stats grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          {[
-            { label: 'Duration', val: `${t.rentalWeeks} week(s)` },
-            { label: 'Weekly Rent', val: formatCurrency(t.weeklyRent) },
-            { label: 'Deposit', val: formatCurrency(t.securityDeposit) },
-            { label: 'Payment', val: t.paymentDetails?.paymentStatus || '-' },
-          ].map(({ label, val }) => (
-            <div key={label} className="bg-zinc-900/50 border border-white/5 rounded-xl p-3">
-              <p className="text-[10px] text-zinc-600 mb-1 uppercase tracking-wider font-semibold">{label}</p>
-              <p className="text-sm font-semibold text-white capitalize">{val}</p>
-            </div>
-          ))}
-        </div>
-
-        {t.rentalStartDate && (
-          <div className="flex gap-4 text-xs text-zinc-500 mb-4">
-            <span className="flex items-center gap-1.5">📅 Started: {formatDate(t.rentalStartDate)}</span>
-            <span className="flex items-center gap-1.5">📅 Return by: {formatDate(t.expectedReturnDate)}</span>
+          {/* Stats grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            {[
+              { label: 'Duration', val: `${t.rentalWeeks} week(s)` },
+              { label: 'Weekly Rent', val: formatCurrency(t.weeklyRent) },
+              { label: 'Deposit', val: formatCurrency(t.securityDeposit) },
+              { label: 'Payment', val: t.paymentDetails?.paymentStatus || '-' },
+            ].map(({ label, val }) => (
+              <div key={label} className="bg-zinc-900/50 border border-white/5 rounded-xl p-3">
+                <p className="text-[10px] text-zinc-600 mb-1 uppercase tracking-wider font-semibold">{label}</p>
+                <p className="text-sm font-semibold text-white capitalize">{val}</p>
+              </div>
+            ))}
           </div>
-        )}
 
-        {/* Action buttons */}
-        <div className="flex gap-3 flex-wrap">
-          {needsExchange && (
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => handleConfirmExchange(t._id)}
-              className="px-5 py-2.5 bg-sky-500/15 border border-sky-500/25 text-sky-400 text-sm font-semibold rounded-xl hover:bg-sky-500/25 transition-colors"
-            >
-              ✓ Confirm Book Exchange
-            </motion.button>
+          {t.rentalStartDate && (
+            <div className="flex gap-4 text-xs text-zinc-500 mb-4">
+              <span className="flex items-center gap-1.5">📅 Started: {formatDate(t.rentalStartDate)}</span>
+              <span className="flex items-center gap-1.5">📅 Return by: {formatDate(t.expectedReturnDate)}</span>
+            </div>
           )}
-          {needsReturn && (
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => handleConfirmReturn(t._id)}
-              className="px-5 py-2.5 bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 text-sm font-semibold rounded-xl hover:bg-emerald-500/25 transition-colors"
-            >
-              ✓ Confirm Book Return
-            </motion.button>
-          )}
-        </div>
 
-        {t.status === 'payment_completed' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="mt-4 p-4 bg-amber-500/8 border border-amber-500/15 rounded-xl text-xs text-amber-400 flex items-start gap-2"
-          >
-            <span className="text-base mt-px">💡</span>
-            <span>
-              <strong>Next step: </strong>Meet with {other?.name} in person to exchange the book. Both parties must confirm.
-            </span>
-          </motion.div>
-        )}
+          {/* Action buttons */}
+          <div className="flex gap-3 flex-wrap">
+            {needsExchange && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => handleConfirmExchange(t._id)}
+                className="px-5 py-2.5 bg-sky-500/15 border border-sky-500/25 text-sky-400 text-sm font-semibold rounded-xl hover:bg-sky-500/25 transition-colors"
+              >
+                ✓ Confirm Book Exchange
+              </motion.button>
+            )}
+            {needsReturn && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => handleConfirmReturn(t._id)}
+                className="px-5 py-2.5 bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 text-sm font-semibold rounded-xl hover:bg-emerald-500/25 transition-colors"
+              >
+                ✓ Confirm Book Return
+              </motion.button>
+            )}
+          </div>
+
+          {t.status === 'payment_completed' && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-4 p-4 bg-amber-500/8 border border-amber-500/15 rounded-xl text-xs text-amber-400 flex items-start gap-2"
+            >
+              <span className="text-base mt-px">💡</span>
+              <span>
+                <strong>Next step: </strong>Meet with {other?.name} in person to exchange the book. Both parties must confirm.
+              </span>
+            </motion.div>
+          )}
+        </BorderGlow>
       </motion.div>
     );
   };
