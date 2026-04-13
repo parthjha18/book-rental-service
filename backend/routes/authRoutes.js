@@ -5,8 +5,18 @@ const generateToken = require('../utils/generateToken');
 const { protect } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
+const nodemailer = require('nodemailer');
 
 const router = express.Router();
+
+// Configure Nodemailer
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
 // Configure Multer for local avatar uploads
 const storage = multer.diskStorage({
@@ -34,7 +44,7 @@ const upload = multer({
 });
 
 // @route   POST /api/auth/send-otp
-// @desc    Generate and send SMS OTP
+// @desc    Generate and send Email OTP
 // @access  Public
 router.post('/send-otp', async (req, res) => {
   try {
@@ -60,47 +70,42 @@ router.post('/send-otp', async (req, res) => {
       { upsert: true, new: true }
     );
 
-    // 🚀 Actual SMS Provider Integration
-    // It will automatically use whichever provider's API key is found in your .env file
-    
-    if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
-      // Option 1: Twilio
-      const twilio = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-      await twilio.messages.create({
-        body: `Your BookShare login OTP is: ${otp}`,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: phone
-      });
-      console.log(`✅ Actual SMS sent to ${phone} via Twilio`);
-      
-    } else if (process.env.FAST2SMS_API_KEY) {
-      // Option 2: Fast2SMS (Popular & Cheap in India)
-      const axios = require('axios');
-      // Clean up phone number: remove +91 and spaces for Fast2SMS
-      const cleanPhone = phone.replace('+91', '').replace(/\s+/g, '');
-      await axios.get('https://www.fast2sms.com/dev/bulkV2', {
-        params: {
-          authorization: process.env.FAST2SMS_API_KEY,
-          variables_values: otp,
-          route: 'otp',
-          numbers: cleanPhone
-        }
-      });
-      console.log(`✅ Actual SMS sent to ${phone} via Fast2SMS`);
-      
+    // Send Email using Nodemailer
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      const mailOptions = {
+        from: `"BookShare" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: 'Your BookShare Verification Code',
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #f97316; text-align: center;">Welcome to BookShare!</h2>
+            <p>Hi there,</p>
+            <p>Thank you for joining our community of book lovers. Please use the following One-Time Password (OTP) to complete your registration:</p>
+            <div style="background: #fdf2f7; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #f97316; border-radius: 8px; margin: 20px 0;">
+              ${otp}
+            </div>
+            <p style="color: #666; font-size: 14px;">This code will expire in 10 minutes. If you didn't request this, please ignore this email.</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+            <p style="text-align: center; color: #999; font-size: 12px;">© 2026 BookShare. Keep Reading!</p>
+          </div>
+        `
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log(`✅ OTP Email sent to ${email}`);
+      res.status(200).json({ success: true, message: 'OTP sent to your email. Please check your inbox (and spam).' });
     } else {
       // Fallback for Local Development
       console.log(`\n\n💬 ============================`);
-      console.log(`📱 MOCK SMS TO ${phone}`);
+      console.log(`📧 MOCK EMAIL TO ${email}`);
       console.log(`🔑 YOUR VERIFICATION OTP IS: ${otp}`);
       console.log(`============================\n\n`);
-      console.log(`⚠️ Note: No Twilio or Fast2SMS API keys found in .env. Mocking SMS.`);
+      res.status(200).json({ success: true, message: 'Development Mode: OTP logged in backend terminal.' });
     }
 
-    res.status(200).json({ success: true, message: 'OTP sent successfully. Check your terminal/messages.' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Failed to send OTP' });
+    console.error('Error sending email:', error);
+    res.status(500).json({ success: false, message: 'Failed to send OTP email' });
   }
 });
 
@@ -113,7 +118,7 @@ router.post('/register', async (req, res) => {
     const { name, email, password, phone, location, otp, avatar } = req.body;
 
     if (!otp) {
-      return res.status(400).json({ success: false, message: 'Please provide the OTP sent to your phone' });
+      return res.status(400).json({ success: false, message: 'Please provide the OTP' });
     }
 
     // Verify OTP

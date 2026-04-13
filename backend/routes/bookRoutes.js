@@ -1,22 +1,50 @@
-const express = require('express');
-const Book = require('../models/Book');
-const User = require('../models/User');
-const { protect } = require('../middleware/auth');
+const multer = require('multer');
+const path = require('path');
 
 const router = express.Router();
+
+// Configure Multer for local book cover uploads
+const storage = multer.diskStorage({
+  destination(req, file, cb) {
+    cb(null, 'uploads/book-covers/');
+  },
+  filename(req, file, cb) {
+    cb(null, `book-${Date.now()}${path.extname(file.originalname)}`);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5000000 }, // 5MB limit
+  fileFilter(req, file, cb) {
+    const filetypes = /jpeg|jpg|png|webp/;
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = filetypes.test(file.mimetype);
+    if (extname && mimetype) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Images only!'));
+    }
+  }
+});
 
 // @route   POST /api/books
 // @desc    Add a new book
 // @access  Private
-router.post('/', protect, async (req, res) => {
+router.post('/', protect, upload.single('coverImage'), async (req, res) => {
   try {
-    const { title, author, description, price, genre, condition, coverImage } = req.body;
+    const { title, author, description, price, genre, condition } = req.body;
+    
+    let coverImage = '';
+    if (req.file) {
+      coverImage = `${req.protocol}://${req.get('host')}/uploads/book-covers/${req.file.filename}`;
+    }
 
     const book = await Book.create({
       title,
       author,
       description,
-      price,
+      price: Number(price),
       genre,
       condition,
       coverImage,
