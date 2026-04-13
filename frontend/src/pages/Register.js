@@ -6,6 +6,7 @@ import { getCurrentLocation } from '../utils/helpers';
 import API from '../services/api';
 import toast from 'react-hot-toast';
 import PageWrapper from '../components/ui/PageWrapper';
+import Logo from '../components/ui/Logo';
 
 const STEPS = ['Account', 'Location', 'Verify'];
 
@@ -88,12 +89,12 @@ const Register = () => {
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             className="glass rounded-3xl p-8 shadow-2xl shadow-black/60 border border-white/8"
           >
-            {/* Logo */}
             <div className="text-center mb-6">
-              <Link to="/" className="inline-flex items-center gap-2 mb-4">
-                <div className="w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center text-lg shadow-lg shadow-orange-500/30">📚</div>
-                <span className="text-xl font-bold">Book<span className="gradient-text">Share</span></span>
-              </Link>
+              <div className="flex justify-center mb-6">
+                <Link to="/">
+                  <Logo />
+                </Link>
+              </div>
               <h1 className="text-2xl font-bold text-white">Create account</h1>
               <p className="text-zinc-500 mt-1 text-sm">Join thousands of book lovers</p>
             </div>

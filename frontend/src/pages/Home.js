@@ -3,6 +3,9 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { LandingHero } from '../components/LandingHero';
 import PageWrapper from '../components/ui/PageWrapper';
+import Logo from '../components/ui/Logo';
+import BookIcon from '../components/ui/BookIcon';
+import BorderGlow from '../components/ui/BorderGlow';
 
 const features = [
   {
@@ -158,7 +161,7 @@ const Home = () => {
                 <div className={`absolute -top-8 -right-8 w-32 h-32 ${f.bg} rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
 
                 <div className={`w-12 h-12 rounded-xl ${f.bg} border ${f.border} flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                  {f.icon}
+                  {f.icon === '📚' ? <BookIcon className="w-9 h-9" /> : f.icon}
                 </div>
                 <h3 className={`text-lg font-bold mb-3 ${f.color}`}>{f.title}</h3>
                 <p className="text-zinc-500 text-sm leading-relaxed">{f.desc}</p>
@@ -277,25 +280,29 @@ const Home = () => {
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true }}
-                  className="glass rounded-2xl p-7 relative overflow-hidden group card-hover"
+                  className="h-full"
                 >
-                  {/* Quote mark */}
-                  <div className="absolute top-4 right-5 text-4xl text-zinc-800 font-serif select-none">"</div>
+                  <BorderGlow
+                    className="h-full rounded-2xl p-7 relative group card-hover text-left flex flex-col justify-between"
+                    glowColor="30 90 60"
+                    colors={['#f97316', '#f59e0b', '#fbbf24']}
+                    backgroundColor="#09090b"
+                  >
+                    {/* Quote mark */}
+                    <div className="absolute top-4 right-5 text-4xl text-zinc-800 font-serif select-none z-10 pointer-events-none">"</div>
 
-                  <p className="text-zinc-400 text-sm leading-relaxed mb-6 relative z-10">"{t.text}"</p>
+                    <p className="text-zinc-400 text-sm leading-relaxed mb-6 relative z-10 font-medium">"{t.text}"</p>
 
-                  <div className="flex items-center gap-3 relative z-10">
-                    <div className="w-10 h-10 rounded-full bg-orange-500/15 border border-orange-500/20 flex items-center justify-center text-lg">
-                      {t.avatar}
+                    <div className="flex items-center gap-3 relative z-10 mt-auto">
+                      <div className="w-10 h-10 rounded-full bg-orange-500/15 border border-orange-500/20 flex items-center justify-center text-lg">
+                        {t.avatar}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-white">{t.name}</p>
+                        <p className="text-xs text-zinc-600">{t.role}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-white">{t.name}</p>
-                      <p className="text-xs text-zinc-600">{t.role}</p>
-                    </div>
-                  </div>
-
-                  {/* Ambient glow */}
-                  <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-orange-500/5 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  </BorderGlow>
                 </motion.div>
               ))}
             </div>
@@ -306,14 +313,20 @@ const Home = () => {
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-16 max-w-4xl mx-auto"
           >
-            <div className="glass rounded-3xl p-10 sm:p-14 relative overflow-hidden">
+            <BorderGlow
+              className="rounded-3xl p-10 sm:p-14 relative overflow-hidden"
+              animated={false}
+              glowColor="30 90 60"
+              colors={['#f97316', '#f59e0b', '#fbbf24']}
+              backgroundColor="#09090b"
+            >
               {/* Ambient glows */}
-              <div className="absolute top-0 left-1/4 w-64 h-64 bg-orange-500/10 rounded-full blur-[100px]" />
-              <div className="absolute bottom-0 right-1/4 w-48 h-48 bg-amber-500/8 rounded-full blur-[80px]" />
+              <div className="absolute top-0 left-1/4 w-64 h-64 bg-orange-500/10 rounded-full blur-[100px] z-10 pointer-events-none" />
+              <div className="absolute bottom-0 right-1/4 w-48 h-48 bg-amber-500/8 rounded-full blur-[80px] z-10 pointer-events-none" />
 
-              <div className="relative z-10">
+              <div className="relative z-20">
                 <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
                   Ready to start <span className="gradient-text">reading</span>?
                 </h2>
@@ -346,7 +359,7 @@ const Home = () => {
                   )}
                 </div>
               </div>
-            </div>
+            </BorderGlow>
           </motion.div>
         </div>
 
@@ -356,9 +369,8 @@ const Home = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
               {/* Brand */}
               <div className="md:col-span-2">
-                <Link to="/" className="flex items-center gap-2.5 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center text-sm shadow-lg shadow-orange-500/30">📚</div>
-                  <span className="text-lg font-bold">Book<span className="gradient-text">Share</span></span>
+                <Link to="/" className="mb-4 block">
+                  <Logo />
                 </Link>
                 <p className="text-zinc-600 text-sm leading-relaxed max-w-sm">
                   A peer-to-peer book rental platform connecting readers in your neighborhood. Share books, save money, and discover new reads.

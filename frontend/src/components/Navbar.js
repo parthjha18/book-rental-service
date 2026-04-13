@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import API from '../services/api';
 import toast from 'react-hot-toast';
+import Logo from './ui/Logo';
+import BookIcon from './ui/BookIcon';
+import Dock from './ui/Dock';
 
 const NAV_LINKS = [
   { to: '/dashboard', label: 'Dashboard', icon: '📊' },
@@ -90,13 +93,8 @@ const Navbar = () => {
           <div className="flex justify-between items-center h-16">
 
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center text-base shadow-lg shadow-orange-500/30 group-hover:shadow-orange-500/50 transition-shadow">
-                📚
-              </div>
-              <span className="text-[17px] font-bold tracking-tight">
-                Book<span className="gradient-text">Share</span>
-              </span>
+            <Link to="/">
+              <Logo />
             </Link>
 
             {/* Desktop nav links */}
@@ -111,28 +109,17 @@ const Navbar = () => {
                       ⚡ Admin Panel
                     </Link>
                   ) : (
-                    <>
-                      {NAV_LINKS.map(({ to, label }) => (
-                        <Link
-                          key={to}
-                          to={to}
-                          className={`relative px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
-                            isActive(to)
-                              ? 'text-white'
-                              : 'text-zinc-400 hover:text-white hover:bg-white/5'
-                          }`}
-                        >
-                          {label}
-                          {isActive(to) && (
-                            <motion.div
-                              layoutId="nav-indicator"
-                              className="absolute inset-0 rounded-xl bg-white/8 -z-10"
-                              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                            />
-                          )}
-                        </Link>
-                      ))}
-                    </>
+                    <Dock 
+                      items={NAV_LINKS.map(link => ({
+                        icon: <span className="text-xl">{link.icon === '📚' ? <BookIcon className="w-6 h-6" /> : link.icon}</span>,
+                        label: link.label,
+                        onClick: () => navigate(link.to),
+                        className: isActive(link.to) ? 'dock-item-active bg-white/5' : ''
+                      }))}
+                      panelHeight={52}
+                      baseItemSize={40}
+                      magnification={60}
+                    />
                   )}
 
                   {/* Avatar */}
@@ -292,7 +279,7 @@ const Navbar = () => {
                             : 'text-zinc-400 hover:text-white hover:bg-white/5'
                         }`}
                       >
-                        <span>{icon}</span> {label}
+                        <span>{icon === '📚' ? <BookIcon className="w-5 h-5" /> : icon}</span> {label}
                       </Link>
                     ))
                   )}

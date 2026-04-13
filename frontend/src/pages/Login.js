@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import PageWrapper from '../components/ui/PageWrapper';
+import Logo from '../components/ui/Logo';
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -40,10 +41,11 @@ const Login = () => {
           >
             {/* Header */}
             <div className="text-center mb-8">
-              <Link to="/" className="inline-flex items-center gap-2 mb-5">
-                <div className="w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center text-lg shadow-lg shadow-orange-500/30">📚</div>
-                <span className="text-xl font-bold">Book<span className="gradient-text">Share</span></span>
-              </Link>
+              <div className="flex justify-center mb-5">
+                <Link to="/">
+                  <Logo />
+                </Link>
+              </div>
               <h1 className="text-2xl font-bold text-white">Welcome back</h1>
               <p className="text-zinc-500 mt-1 text-sm">Sign in to continue reading</p>
             </div>

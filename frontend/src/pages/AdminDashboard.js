@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { PageLoader } from '../components/ui/SkeletonLoader';
 import PageWrapper from '../components/ui/PageWrapper';
 import toast from 'react-hot-toast';
+import BookIcon from '../components/ui/BookIcon';
 
 const AdminDashboard = () => {
   const { user: currentUser } = useAuth();
@@ -103,7 +104,9 @@ const AdminDashboard = () => {
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">{stat.label}</span>
-                    <span className="text-xl">{stat.icon}</span>
+                    <span className="text-xl">
+                      {stat.icon === '📚' ? <BookIcon className="w-6 h-6" /> : stat.icon}
+                    </span>
                   </div>
                   <p className={`text-3xl sm:text-4xl font-black tracking-tight text-${stat.color}-400`}>{stat.val}</p>
                 </div>
