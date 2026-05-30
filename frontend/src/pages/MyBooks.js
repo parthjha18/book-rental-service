@@ -20,7 +20,8 @@ const MyBooks = () => {
       const { data } = await API.get('/books/user/my-books');
       if (data.success) setBooks(data.data);
     } catch (error) {
-      toast.error('Failed to fetch your books');
+      console.error('MyBooks Fetch Error:', error);
+      toast.error(error.response?.data?.message || error.message || 'Failed to fetch your books');
     } finally {
       setLoading(false);
     }

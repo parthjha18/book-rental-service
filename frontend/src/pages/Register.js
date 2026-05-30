@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
 import { getCurrentLocation } from '../utils/helpers';
 import API from '../services/api';
@@ -10,22 +11,34 @@ import Logo from '../components/ui/Logo';
 
 const STEPS = ['Account', 'Location', 'Verify'];
 
+/** Displays a red validation error beneath a field */
+const FieldError = ({ message }) =>
+  message ? <p className="mt-1 text-xs text-red-400">{message}</p> : null;
+
 const Register = () => {
-  const [step, setStep] = useState(0);
-  const [formData, setFormData] = useState({
-    name: '', email: '', password: '', phone: '', address: '', city: '', pincode: '', otp: '', avatar: ''
-  });
+  const [step, setStep]                 = useState(0);
   const [loadingLocation, setLoadingLocation] = useState(false);
-  const [coordinates,     setCoordinates]     = useState(null);
-  const [otpSent,         setOtpSent]         = useState(false);
-  const [sendingOtp,      setSendingOtp]       = useState(false);
-  const [loading,         setLoading]          = useState(false);
+  const [coordinates, setCoordinates]   = useState(null);
+  const [otpSent, setOtpSent]           = useState(false);
+  const [sendingOtp, setSendingOtp]     = useState(false);
 
-  const { register } = useAuth();
-  const navigate     = useNavigate();
+  const { register: registerUser } = useAuth();
+  const navigate = useNavigate();
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  // ── react-hook-form ────────────────────────────────────────────────────────
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    defaultValues: {
+      name: '', email: '', password: '', phone: '',
+      address: '', city: '', pincode: '', otp: '', avatar: '',
+    },
+  });
 
+  // ── Helpers ────────────────────────────────────────────────────────────────
   const handleGetLocation = async () => {
     setLoadingLocation(true);
     try {
@@ -41,9 +54,10 @@ const Register = () => {
 
   const handleSendOtp = async () => {
     if (!coordinates) { toast.error('Please capture your location first'); return; }
+    const { phone, email } = getValues();
     setSendingOtp(true);
     try {
-      const { data } = await API.post('/auth/send-otp', { phone: formData.phone, email: formData.email });
+      const { data } = await API.post('/auth/send-otp', { phone, email });
       if (data.success) {
         setOtpSent(true);
         setStep(2);
@@ -56,26 +70,37 @@ const Register = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (formData) => {
     if (!formData.otp) { toast.error('Please enter the OTP'); return; }
-    setLoading(true);
-    const result = await register({
+    const result = await registerUser({
       ...formData,
-      location: { coordinates, address: formData.address, city: formData.city, pincode: formData.pincode },
-      otp: formData.otp
+      location: {
+        coordinates,
+        address: formData.address,
+        city: formData.city,
+        pincode: formData.pincode,
+      },
     });
-    setLoading(false);
     if (result.success) navigate('/dashboard');
   };
 
-  const labelCls = "block text-xs font-semibold text-zinc-400 mb-2 uppercase tracking-widest";
-  const inputCls = "input-premium";
+  const goToStep1 = () => {
+    const { name, email, password, phone } = getValues();
+    if (!name || !email || !password || !phone) {
+      toast.error('Please fill all required fields');
+      return;
+    }
+    setStep(1);
+  };
+
+  // ── Shared style tokens ───────────────────────────────────────────────────
+  const labelCls = 'block text-xs font-semibold text-zinc-400 mb-2 uppercase tracking-widest';
+  const inputCls = 'input-premium';
 
   return (
     <PageWrapper>
       <div className="min-h-screen bg-black flex items-center justify-center px-4 py-16 relative overflow-hidden">
-        
+
         {/* Glows */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-orange-500/5 rounded-full blur-[120px]" />
@@ -91,9 +116,7 @@ const Register = () => {
           >
             <div className="text-center mb-6">
               <div className="flex justify-center mb-6">
-                <Link to="/">
-                  <Logo />
-                </Link>
+                <Link to="/"><Logo /></Link>
               </div>
               <h1 className="text-2xl font-bold text-white">Create account</h1>
               <p className="text-zinc-500 mt-1 text-sm">Join thousands of book lovers</p>
@@ -118,45 +141,103 @@ const Register = () => {
               ))}
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
               <AnimatePresence mode="wait">
+
+                {/* ── Step 0: Account details ── */}
                 {step === 0 && (
                   <motion.div
                     key="step0"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.25 }}
+                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}
                     className="space-y-4"
                   >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {[
-                        { name: 'name',     type: 'text',     label: 'Full Name', placeholder: 'John Doe' },
-                        { name: 'email',    type: 'email',    label: 'Email',     placeholder: 'you@example.com' },
-                        { name: 'password', type: 'password', label: 'Password',  placeholder: 'Min 6 characters' },
-                        { name: 'phone',    type: 'tel',      label: 'Phone',     placeholder: '+91 98765 43210' },
-                      ].map(({ name, type, label, placeholder }) => (
-                        <div key={name}>
-                          <label className={labelCls}>{label}</label>
-                          <input type={type} name={name} value={formData[name]} onChange={handleChange} required placeholder={placeholder} className={inputCls} />
-                        </div>
-                      ))}
+                      {/* Name */}
+                      <div>
+                        <label className={labelCls}>Full Name</label>
+                        <input
+                          id="reg-name"
+                          type="text"
+                          placeholder="John Doe"
+                          className={inputCls}
+                          {...register('name', { required: 'Name is required' })}
+                        />
+                        <FieldError message={errors.name?.message} />
+                      </div>
+
+                      {/* Email */}
+                      <div>
+                        <label className={labelCls}>Email</label>
+                        <input
+                          id="reg-email"
+                          type="email"
+                          placeholder="you@example.com"
+                          className={inputCls}
+                          {...register('email', {
+                            required: 'Email is required',
+                            pattern: { value: /^\S+@\S+\.\S+$/, message: 'Enter a valid email' },
+                          })}
+                        />
+                        <FieldError message={errors.email?.message} />
+                      </div>
+
+                      {/* Password */}
+                      <div>
+                        <label className={labelCls}>Password</label>
+                        <input
+                          id="reg-password"
+                          type="password"
+                          placeholder="Min 6 characters"
+                          className={inputCls}
+                          {...register('password', {
+                            required: 'Password is required',
+                            minLength: { value: 6, message: 'Password must be at least 6 characters' },
+                          })}
+                        />
+                        <FieldError message={errors.password?.message} />
+                      </div>
+
+                      {/* Phone */}
+                      <div>
+                        <label className={labelCls}>Phone</label>
+                        <input
+                          id="reg-phone"
+                          type="tel"
+                          placeholder="+91 98765 43210"
+                          className={inputCls}
+                          {...register('phone', {
+                            required: 'Phone number is required',
+                            pattern: {
+                              value: /^[+]?[\d\s\-().]{7,15}$/,
+                              message: 'Enter a valid phone number',
+                            },
+                          })}
+                        />
+                        <FieldError message={errors.phone?.message} />
+                      </div>
                     </div>
+
+                    {/* Avatar (optional) */}
                     <div>
-                      <label className={labelCls}>Profile Picture URL <span className="text-zinc-600 normal-case tracking-normal">(optional)</span></label>
-                      <input type="url" name="avatar" value={formData.avatar} onChange={handleChange} placeholder="https://example.com/photo.jpg" className={inputCls} />
+                      <label className={labelCls}>
+                        Profile Picture URL{' '}
+                        <span className="text-zinc-600 normal-case tracking-normal">(optional)</span>
+                      </label>
+                      <input
+                        id="reg-avatar"
+                        type="url"
+                        placeholder="https://example.com/photo.jpg"
+                        className={inputCls}
+                        {...register('avatar')}
+                      />
                     </div>
+
                     <motion.button
                       type="button"
                       whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => {
-                        if (!formData.name || !formData.email || !formData.password || !formData.phone) {
-                          toast.error('Please fill all required fields');
-                          return;
-                        }
-                        setStep(1);
-                      }}
+                      onClick={goToStep1}
                       className="w-full py-3 bg-white text-black rounded-xl font-bold text-sm hover:bg-orange-50 transition-colors shadow-md mt-2"
                     >
                       Continue →
@@ -164,29 +245,49 @@ const Register = () => {
                   </motion.div>
                 )}
 
+                {/* ── Step 1: Location ── */}
                 {step === 1 && (
                   <motion.div
                     key="step1"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.25 }}
+                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}
                     className="space-y-4"
                   >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {[
-                        { name: 'city',    label: 'City',    placeholder: 'Mumbai' },
-                        { name: 'pincode', label: 'Pincode', placeholder: '400001' },
-                      ].map(({ name, label, placeholder }) => (
-                        <div key={name}>
-                          <label className={labelCls}>{label}</label>
-                          <input type="text" name={name} value={formData[name]} onChange={handleChange} required placeholder={placeholder} className={inputCls} />
-                        </div>
-                      ))}
+                      <div>
+                        <label className={labelCls}>City</label>
+                        <input
+                          id="reg-city"
+                          type="text"
+                          placeholder="Mumbai"
+                          className={inputCls}
+                          {...register('city', { required: 'City is required' })}
+                        />
+                        <FieldError message={errors.city?.message} />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Pincode</label>
+                        <input
+                          id="reg-pincode"
+                          type="text"
+                          placeholder="400001"
+                          className={inputCls}
+                          {...register('pincode', { required: 'Pincode is required' })}
+                        />
+                        <FieldError message={errors.pincode?.message} />
+                      </div>
                     </div>
+
                     <div>
                       <label className={labelCls}>Street Address</label>
-                      <input type="text" name="address" value={formData.address} onChange={handleChange} required placeholder="Street address" className={inputCls} />
+                      <input
+                        id="reg-address"
+                        type="text"
+                        placeholder="Street address"
+                        className={inputCls}
+                        {...register('address', { required: 'Address is required' })}
+                      />
+                      <FieldError message={errors.address?.message} />
                     </div>
 
                     <motion.button
@@ -217,7 +318,7 @@ const Register = () => {
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={handleSendOtp}
-                        disabled={sendingOtp || !formData.city || !formData.address}
+                        disabled={sendingOtp}
                         className="flex-1 py-3 bg-white text-black rounded-xl font-bold text-sm hover:bg-orange-50 transition-colors shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
                       >
                         {sendingOtp ? (
@@ -231,31 +332,35 @@ const Register = () => {
                   </motion.div>
                 )}
 
+                {/* ── Step 2: OTP Verify ── */}
                 {step === 2 && (
                   <motion.div
                     key="step2"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.25 }}
+                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}
                     className="space-y-4"
                   >
                     <div className="p-4 bg-orange-500/8 border border-orange-500/20 rounded-xl text-sm text-orange-300 text-center">
-                      📧 A 6-digit OTP has been sent to your email: <strong className="text-orange-400">{formData.email}</strong>
+                      📧 A 6-digit OTP has been sent to your email:{' '}
+                      <strong className="text-orange-400">{getValues('email')}</strong>
                     </div>
                     <div>
                       <label className={labelCls}>Enter OTP</label>
                       <input
+                        id="reg-otp"
                         type="text"
-                        name="otp"
-                        value={formData.otp}
-                        onChange={handleChange}
-                        required
                         maxLength="6"
                         placeholder="6-digit code"
-                        className={inputCls + " text-center text-xl tracking-[0.5em] font-bold"}
+                        className={inputCls + ' text-center text-xl tracking-[0.5em] font-bold'}
+                        {...register('otp', {
+                          required: 'OTP is required',
+                          minLength: { value: 6, message: 'OTP must be 6 digits' },
+                          maxLength: { value: 6, message: 'OTP must be 6 digits' },
+                        })}
                       />
+                      <FieldError message={errors.otp?.message} />
                     </div>
+
                     <div className="flex gap-3">
                       <button
                         type="button"
@@ -268,10 +373,10 @@ const Register = () => {
                         type="submit"
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.98 }}
-                        disabled={loading}
+                        disabled={isSubmitting}
                         className="flex-1 py-3 bg-white text-black rounded-xl font-bold text-sm hover:bg-orange-50 transition-colors shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
                       >
-                        {loading ? (
+                        {isSubmitting ? (
                           <span className="flex items-center justify-center gap-2">
                             <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
                             Creating…

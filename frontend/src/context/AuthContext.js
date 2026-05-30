@@ -80,6 +80,34 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const forgotPassword = async (email) => {
+    try {
+      const { data } = await API.post('/auth/forgot-password', { email });
+      if (data.success) {
+        toast.success(data.message);
+        return { success: true, message: data.message };
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to send reset link';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
+  const resetPassword = async (token, password) => {
+    try {
+      const { data } = await API.post('/auth/reset-password', { token, password });
+      if (data.success) {
+        toast.success(data.message);
+        return { success: true };
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || 'Password reset failed';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
   const value = {
     user,
     setUser,
@@ -88,6 +116,8 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     updateLocation,
+    forgotPassword,
+    resetPassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

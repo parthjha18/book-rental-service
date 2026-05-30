@@ -13,6 +13,8 @@ import RentBook from './pages/RentBook';
 import MyRentals from './pages/MyRentals';
 import MyBooks from './pages/MyBooks';
 import AdminDashboard from './pages/AdminDashboard';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -23,6 +25,8 @@ const AnimatedRoutes = () => {
         <Route path="/" element={<Home />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route
           path="/dashboard"

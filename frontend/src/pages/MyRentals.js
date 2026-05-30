@@ -32,7 +32,8 @@ const MyRentals = () => {
         if (data.success) setBooksRented(data.data);
       }
     } catch (error) {
-      toast.error('Failed to fetch rentals');
+      console.error('MyRentals Fetch Error:', error);
+      toast.error(error.response?.data?.message || error.message || 'Failed to fetch rentals');
     } finally {
       setLoading(false);
     }

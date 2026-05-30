@@ -5,14 +5,14 @@ import { useAuth } from '../context/AuthContext';
 import API from '../services/api';
 import toast from 'react-hot-toast';
 import Logo from './ui/Logo';
-import BookIcon from './ui/BookIcon';
 import Dock from './ui/Dock';
+import { LayoutDashboard, Search, Library, ClipboardList } from 'lucide-react';
 
 const NAV_LINKS = [
-  { to: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { to: '/search',    label: 'Browse',    icon: '🔍' },
-  { to: '/my-books',  label: 'My Books',  icon: '📚' },
-  { to: '/rentals',   label: 'Rentals',   icon: '📋' },
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/search',    label: 'Browse',    icon: Search },
+  { to: '/my-books',  label: 'My Books',  icon: Library },
+  { to: '/rentals',   label: 'Rentals',   icon: ClipboardList },
 ];
 
 const Navbar = () => {
@@ -110,12 +110,15 @@ const Navbar = () => {
                     </Link>
                   ) : (
                     <Dock 
-                      items={NAV_LINKS.map(link => ({
-                        icon: <span className="text-xl">{link.icon === '📚' ? <BookIcon className="w-6 h-6" /> : link.icon}</span>,
-                        label: link.label,
-                        onClick: () => navigate(link.to),
-                        className: isActive(link.to) ? 'dock-item-active bg-white/5' : ''
-                      }))}
+                      items={NAV_LINKS.map(link => {
+                        const Icon = link.icon;
+                        return {
+                          icon: <span className="text-xl"><Icon className="w-5 h-5" /></span>,
+                          label: link.label,
+                          onClick: () => navigate(link.to),
+                          className: isActive(link.to) ? 'dock-item-active bg-white/5' : ''
+                        };
+                      })}
                       panelHeight={52}
                       baseItemSize={40}
                       magnification={60}
@@ -269,7 +272,7 @@ const Navbar = () => {
                       ⚡ Admin Panel
                     </Link>
                   ) : (
-                    NAV_LINKS.map(({ to, label, icon }) => (
+                    NAV_LINKS.map(({ to, label, icon: Icon }) => (
                       <Link
                         key={to}
                         to={to}
@@ -279,7 +282,7 @@ const Navbar = () => {
                             : 'text-zinc-400 hover:text-white hover:bg-white/5'
                         }`}
                       >
-                        <span>{icon === '📚' ? <BookIcon className="w-5 h-5" /> : icon}</span> {label}
+                        <span><Icon className="w-5 h-5" /></span> {label}
                       </Link>
                     ))
                   )}

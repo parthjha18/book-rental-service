@@ -1,23 +1,25 @@
-import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
 import PageWrapper from '../components/ui/PageWrapper';
 import Logo from '../components/ui/Logo';
 
+const FieldError = ({ message }) =>
+  message ? <p className="mt-1 text-xs text-red-400">{message}</p> : null;
+
 const Login = () => {
-  const [formData, setFormData] = useState({ email: '', password: '' });
-  const [loading, setLoading]   = useState(false);
-  const { login }  = useAuth();
-  const navigate   = useNavigate();
+  const { login } = useAuth();
+  const navigate  = useNavigate();
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({ defaultValues: { email: '', password: '' } });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    const result = await login(formData);
-    setLoading(false);
+  const onSubmit = async (data) => {
+    const result = await login(data);
     if (result.success) navigate('/dashboard');
   };
 
@@ -42,42 +44,60 @@ const Login = () => {
             {/* Header */}
             <div className="text-center mb-8">
               <div className="flex justify-center mb-5">
-                <Link to="/">
-                  <Logo />
-                </Link>
+                <Link to="/"><Logo /></Link>
               </div>
               <h1 className="text-2xl font-bold text-white">Welcome back</h1>
               <p className="text-zinc-500 mt-1 text-sm">Sign in to continue reading</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {[
-                { name: 'email',    type: 'email',    label: 'Email',    placeholder: 'you@example.com' },
-                { name: 'password', type: 'password', label: 'Password', placeholder: '••••••••' },
-              ].map(({ name, type, label, placeholder }) => (
-                <div key={name}>
-                  <label className="block text-xs font-semibold text-zinc-400 mb-2 uppercase tracking-widest">{label}</label>
-                  <input
-                    type={type}
-                    name={name}
-                    value={formData[name]}
-                    onChange={handleChange}
-                    required
-                    placeholder={placeholder}
-                    className="input-premium"
-                  />
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+              {/* Email */}
+              <div>
+                <label className="block text-xs font-semibold text-zinc-400 mb-2 uppercase tracking-widest">
+                  Email
+                </label>
+                <input
+                  id="login-email"
+                  type="email"
+                  placeholder="you@example.com"
+                  className="input-premium"
+                  {...register('email', {
+                    required: 'Email is required',
+                    pattern: { value: /^\S+@\S+\.\S+$/, message: 'Enter a valid email' },
+                  })}
+                />
+                <FieldError message={errors.email?.message} />
+              </div>
+
+              {/* Password */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-widest">
+                    Password
+                  </label>
+                  <Link to="/forgot-password" className="text-xs text-orange-400 hover:text-orange-300 font-semibold transition-colors">
+                    Forgot Password?
+                  </Link>
                 </div>
-              ))}
+                <input
+                  id="login-password"
+                  type="password"
+                  placeholder="••••••••"
+                  className="input-premium"
+                  {...register('password', { required: 'Password is required' })}
+                />
+                <FieldError message={errors.password?.message} />
+              </div>
 
               <motion.button
                 type="submit"
-                disabled={loading}
+                disabled={isSubmitting}
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full mt-2 py-3 bg-white text-black rounded-xl font-bold text-sm
                            hover:bg-orange-50 transition-colors shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {loading ? (
+                {isSubmitting ? (
                   <span className="flex items-center justify-center gap-2">
                     <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
                     Signing in…
