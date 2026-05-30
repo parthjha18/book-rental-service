@@ -1,5 +1,6 @@
-require('dotenv').config();
+require('dotenv').config({ override: false });
 const express = require('express');
+
 const cors = require('cors');
 const connectDB = require('./config/db');
 
@@ -17,8 +18,13 @@ connectDB();
 
 
 // ✅ CORS (FIXED)
+const allowedOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000'];
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: allowedOrigins,
   credentials: true
 }));
 

@@ -67,7 +67,13 @@ const userSchema = new mongoose.Schema({
   rentedBooks: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Book'
-  }]
+  }],
+  resetPasswordToken: {
+    type: String
+  },
+  resetPasswordExpire: {
+    type: Date
+  }
 }, {
   timestamps: true
 });
