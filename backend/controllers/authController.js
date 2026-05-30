@@ -7,7 +7,9 @@ const crypto = require('crypto');
 
 // Configure Nodemailer (singleton-style — reused across requests)
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -307,7 +309,7 @@ const forgotPassword = async (req, res) => {
 
       await transporter.sendMail(mailOptions);
       console.log(`✅ Password reset email sent to ${user.email}`);
-      
+
       // Write reset link to a debug file for testing/retrieval
       const fs = require('fs');
       const debugFilePath = path.join(__dirname, '../reset_link_debug.txt');
