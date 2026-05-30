@@ -1,402 +1,210 @@
-# BookShare - Online Book Rental Service
+# 📚 BookShare — Peer-to-Peer Book Rental Service
 
-A full-stack web application that allows people in the same locality to share and rent books among themselves.
+> A full-stack platform where book lovers can lend and rent books from people nearby, powered by geolocation, Razorpay payments, and a dual-confirmation rental lifecycle.
 
-## Features
+---
 
-- User registration and authentication with JWT
-- Location-based book search (find books nearby using geolocation)
-- Add and manage books
-- Rent books at ₹40/week with security deposit
-- Razorpay payment integration
-- In-person book exchange with dual confirmation system
-- Transaction tracking for both renters and owners
-- Wishlist functionality with availability notifications
+## 🛠 Tech Stack
 
-## Tech Stack
+### Backend
+| Layer | Technology |
+|-------|-----------|
+| Runtime | Node.js 20 |
+| Framework | Express 5 |
+| Database | MongoDB + Mongoose 8 |
+| Auth | JWT (jsonwebtoken) + bcryptjs |
+| Payments | Razorpay |
+| Email | Nodemailer (Gmail SMTP) |
+| File Uploads | Multer (local disk storage) |
+| Validation | express-validator |
+| Containerisation | Docker + Docker Compose |
 
-**Frontend:**
-- React
-- TailwindCSS
-- React Router DOM
-- Axios
-- React Hot Toast
+### Frontend
+| Layer | Technology |
+|-------|-----------|
+| Framework | React 19 (Create React App) |
+| Routing | React Router DOM v7 |
+| Styling | Tailwind CSS v3 |
+| Animations | Framer Motion |
+| HTTP | Axios |
+| Forms | react-hook-form |
+| Toasts | react-hot-toast |
 
-**Backend:**
-- Node.js
-- Express.js
-- MongoDB with Mongoose
-- JWT Authentication
-- bcrypt.js for password hashing
-- Razorpay payment gateway
+---
 
-## Project Structure
+## ✨ Features
 
+- **JWT Authentication** — secure register / login with token-based sessions
+- **Email OTP Verification** — 6-digit OTP sent via Nodemailer on registration
+- **Geolocation-Based Discovery** — find available books near you (Haversine distance, configurable radius)
+- **Razorpay Payment Integration** — create orders, verify signatures server-side
+- **Dual-Confirmation Rental Lifecycle** — both owner and renter must confirm exchange AND return; prevents disputes
+- **Wishlist & Waitlist** — users can wishlist books; owners see how many people are waiting
+- **Book Management** — add books with cover image upload, edit, delete (with renter-state guard)
+- **Admin Dashboard** — platform stats (users, books, transactions, revenue) + user management
+- **Input Validation** — express-validator on all mutating endpoints; 422 responses with per-field errors
+- **Debounced Search** — 500 ms debounce on text search; genre/nearby/distance filters fire immediately
+- **MVC Architecture** — controllers cleanly separated from route definitions
+- **Docker Compose** — one-command local stack (MongoDB + backend + frontend)
+
+---
+
+## 🏗 Architecture
+
+### Backend (MVC)
 ```
-book-rental-service/
-├── backend/
-│   ├── config/
-│   │   └── db.js
-│   ├── middleware/
-│   │   └── auth.js
-│   ├── models/
-│   │   ├── User.js
-│   │   ├── Book.js
-│   │   └── Transaction.js
-│   ├── routes/
-│   │   ├── authRoutes.js
-│   │   ├── bookRoutes.js
-│   │   └── transactionRoutes.js
-│   ├── utils/
-│   │   ├── generateToken.js
-│   │   └── helpers.js
-│   ├── .env
-│   ├── server.js
-│   ├── seed.js
-│   └── package.json
-└── frontend/
-    ├── src/
-    │   ├── components/
-    │   │   ├── Navbar.js
-    │   │   ├── BookCard.js
-    │   │   └── PrivateRoute.js
-    │   ├── context/
-    │   │   └── AuthContext.js
-    │   ├── pages/
-    │   │   ├── Home.js
-    │   │   ├── Register.js
-    │   │   ├── Login.js
-    │   │   ├── Dashboard.js
-    │   │   ├── SearchBooks.js
-    │   │   ├── RentBook.js
-    │   │   ├── MyRentals.js
-    │   │   └── MyBooks.js
-    │   ├── services/
-    │   │   └── api.js
-    │   ├── utils/
-    │   │   └── helpers.js
-    │   ├── App.js
-    │   └── index.js
-    ├── .env
-    └── package.json
+backend/
+├── controllers/         # Business logic (authController, bookController, transactionController, adminController)
+├── middleware/          # JWT protect/admin guards, express-validator validate()
+├── models/              # Mongoose schemas — User, Book, Transaction, Otp
+├── routes/              # Thin routers — attach middleware + controller handlers only
+├── utils/               # generateToken, calculateRentalAmount, helpers
+├── uploads/             # Multer disk storage (avatars + book covers)
+└── server.js            # Express app bootstrap
 ```
 
-## Installation & Setup
+### Frontend
+```
+frontend/src/
+├── components/          # Reusable UI components (BookCard, Navbar, modals, skeletons…)
+├── context/             # AuthContext — global auth state + login/register/logout helpers
+├── pages/               # Route-level components (Home, Login, Register, SearchBooks, RentBook, Dashboard…)
+├── services/            # Axios instance (api.js) — reads REACT_APP_API_URL
+└── utils/               # getCurrentLocation, formatting helpers
+```
+
+---
+
+## 🚀 Setup Instructions
 
 ### Prerequisites
-
-- Node.js (v14 or higher)
+- Node.js ≥ 18, npm ≥ 9
 - MongoDB (local or Atlas)
-- Razorpay account (for payment gateway)
+- (Optional) Razorpay test account, Gmail App Password
 
-### Step 1: Install MongoDB
-
-**On macOS:**
+### 1 · Clone the repo
 ```bash
-brew tap mongodb/brew
-brew install mongodb-community
-brew services start mongodb-community
+git clone https://github.com/your-username/book-rental-service.git
+cd book-rental-service
 ```
 
-**Verify MongoDB is running:**
+### 2 · Backend — install & configure
 ```bash
-mongosh
-# Should connect to MongoDB shell
-```
-
-### Step 2: Backend Setup
-
-```bash
-# Navigate to backend directory
-cd /Users/parth/book-rental-service/backend
-
-# Install dependencies (already done)
-npm install
-
-# Configure environment variables
-# Edit the .env file with your credentials:
-# - MongoDB URI (default: mongodb://localhost:27017/book-rental-db)
-# - JWT Secret (change this!)
-# - Razorpay credentials (get from https://dashboard.razorpay.com/)
-
-# Seed the database with sample data
-npm run seed
-
-# Expected output:
-# ✅ MongoDB Connected
-# 🗑️  Clearing existing data...
-# 👥 Creating users...
-# ✅ Created 4 users
-# 📚 Creating books...
-# ✅ Created 10 books
-# ✅ Database seeded successfully!
-```
-
-### Step 3: Frontend Setup
-
-```bash
-# Navigate to frontend directory
-cd /Users/parth/book-rental-service/frontend
-
-# Install dependencies (already done)
-npm install
-
-# Configure environment variables
-# Edit the .env file:
-# - REACT_APP_API_URL (default: http://localhost:5000/api)
-# - REACT_APP_RAZORPAY_KEY_ID (your Razorpay key)
-```
-
-### Step 4: Get Razorpay Credentials
-
-1. Sign up at https://dashboard.razorpay.com/
-2. Go to Settings → API Keys
-3. Generate Test/Live Keys
-4. Copy the Key ID and Secret
-5. Update both `.env` files:
-   - Backend: `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET`
-   - Frontend: `REACT_APP_RAZORPAY_KEY_ID`
-
-## Running the Application
-
-### Option 1: Run Both Servers Separately
-
-**Terminal 1 - Backend:**
-```bash
-cd /Users/parth/book-rental-service/backend
-npm run dev
-
-# Expected output:
-# [nodemon] starting `node server.js`
-# 🚀 Server is running on port 5000
-# 📍 API available at http://localhost:5000
-# ✅ MongoDB Connected: localhost
-```
-
-**Terminal 2 - Frontend:**
-```bash
-cd /Users/parth/book-rental-service/frontend
-npm start
-
-# Expected output:
-# Compiled successfully!
-# webpack compiled with 1 warning
-#
-# Local:            http://localhost:3000
-# On Your Network:  http://192.168.x.x:3000
-```
-
-### Option 2: Quick Start Script
-
-Create a start script in the root directory:
-
-```bash
-# In /Users/parth/book-rental-service/
-# Create start.sh
-
-#!/bin/bash
-echo "Starting MongoDB..."
-brew services start mongodb-community
-
-echo "Starting Backend..."
 cd backend
-npm run dev &
+npm install
+cp .env.example .env   # fill in all values (see Environment Variables below)
+```
 
-echo "Starting Frontend..."
+### 3 · Frontend — install & configure
+```bash
 cd ../frontend
-npm start
+npm install --legacy-peer-deps
+# .env already exists — edit REACT_APP_API_URL if needed
 ```
 
-## Testing the Application
-
-### Sample Login Credentials (After Seeding)
-
-```
-Email: amit@example.com
-Password: password123
-
-Email: priya@example.com
-Password: password123
-
-Email: rahul@example.com
-Password: password123
-
-Email: sneha@example.com
-Password: password123
-```
-
-### Testing Flow
-
-1. **Register a New User**
-   - Go to http://localhost:3000
-   - Click "Register"
-   - Fill in details
-   - Click "Capture My Location" (allow browser location access)
-   - Submit registration
-
-2. **Add a Book**
-   - Login and go to Dashboard
-   - Click "Add Book"
-   - Fill in book details
-   - Submit
-
-3. **Search for Books**
-   - Go to "Search Books"
-   - Toggle "Show Nearby Books Only" to find books near you
-   - Adjust max distance slider
-
-4. **Rent a Book**
-   - Click "Rent" on any available book
-   - Select rental duration
-   - Click "Pay & Rent Book"
-   - Complete Razorpay payment (use test cards in test mode)
-
-5. **Confirm Exchange**
-   - Go to "My Rentals"
-   - Both renter and owner must click "Confirm Book Exchange"
-   - Once both confirm, rental starts
-
-6. **Return Book**
-   - Go to "My Rentals"
-   - Both parties click "Confirm Book Return"
-   - Transaction completes, book becomes available again
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user
-- `GET /api/auth/me` - Get current user (protected)
-- `PUT /api/auth/update-location` - Update user location (protected)
-
-### Books
-- `GET /api/books` - Get all books (with filters)
-- `GET /api/books/nearby` - Get nearby books (protected)
-- `GET /api/books/:id` - Get single book
-- `POST /api/books` - Add new book (protected)
-- `PUT /api/books/:id` - Update book (protected, owner only)
-- `DELETE /api/books/:id` - Delete book (protected, owner only)
-- `POST /api/books/:id/wishlist` - Add to wishlist (protected)
-- `DELETE /api/books/:id/wishlist` - Remove from wishlist (protected)
-
-### Transactions
-- `POST /api/transactions/create-order` - Create Razorpay order (protected)
-- `POST /api/transactions/verify-payment` - Verify payment (protected)
-- `POST /api/transactions/:id/confirm-exchange` - Confirm book exchange (protected)
-- `POST /api/transactions/:id/confirm-return` - Confirm book return (protected)
-- `GET /api/transactions/my-rentals` - Get user's rentals (protected)
-- `GET /api/transactions/my-books-rented` - Get books rented out (protected)
-- `GET /api/transactions/:id` - Get single transaction (protected)
-
-## Payment Flow
-
-1. User clicks "Rent Book"
-2. Backend creates Razorpay order
-3. Frontend opens Razorpay checkout
-4. User completes payment
-5. Backend verifies payment signature
-6. Transaction status updated to "payment_completed"
-7. Users meet in person to exchange book
-8. Both confirm exchange → rental starts
-9. After rental period, both confirm return
-10. Book becomes available, deposit refunded
-
-## Environment Variables
-
-### Backend (.env)
-```
-MONGODB_URI=mongodb://localhost:27017/book-rental-db
-JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
-PORT=5000
-RAZORPAY_KEY_ID=your_razorpay_key_id
-RAZORPAY_KEY_SECRET=your_razorpay_key_secret
-SECURITY_DEPOSIT_PERCENTAGE=20
-WEEKLY_RENT=40
-NEARBY_RADIUS_KM=10
-```
-
-### Frontend (.env)
-```
-REACT_APP_API_URL=http://localhost:5000/api
-REACT_APP_RAZORPAY_KEY_ID=your_razorpay_key_id
-```
-
-## Troubleshooting
-
-### MongoDB Connection Error
+### 4 · Seed the database (optional)
 ```bash
-# Make sure MongoDB is running
-brew services list
-brew services start mongodb-community
-
-# Or start manually
-mongod --config /usr/local/etc/mongod.conf
+cd ../backend
+npm run seed
 ```
 
-### Port Already in Use
+### 5 · Run locally
 ```bash
-# Kill process on port 5000
-lsof -ti:5000 | xargs kill -9
+# Terminal 1 — backend
+cd backend && npm run dev
 
-# Kill process on port 3000
-lsof -ti:3000 | xargs kill -9
+# Terminal 2 — frontend
+cd frontend && npm start
 ```
 
-### Location Permission Denied
-- Make sure to allow location access in browser
-- For Safari: Preferences → Websites → Location → Allow
-- For Chrome: Settings → Privacy → Site Settings → Location → Allow
+### Or — Docker Compose (all-in-one)
+```bash
+docker-compose up --build
+```
+- Frontend → http://localhost:3000  
+- Backend  → http://localhost:5001  
+- MongoDB  → mongodb://localhost:27017/bookshare
 
-### Razorpay Test Mode
-Use these test cards in test mode:
-- Card Number: 4111 1111 1111 1111
-- CVV: Any 3 digits
-- Expiry: Any future date
+---
 
-## Production Deployment
+## 🔌 API Endpoints
 
-### Backend (Render/Railway)
-1. Push code to GitHub
-2. Create new Web Service
-3. Connect repository
-4. Add environment variables
-5. Deploy
+### Auth  `/api/auth`
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/send-otp` | Public | Send 6-digit OTP to email |
+| POST | `/register` | Public | Register user (validates name, email, password ≥6, phone, otp, coordinates) |
+| POST | `/login` | Public | Login, returns JWT |
+| GET | `/me` | 🔐 User | Get current user profile |
+| PUT | `/update-location` | 🔐 User | Update GPS coordinates |
+| POST | `/upload-avatar` | 🔐 User | Upload profile picture (multipart) |
 
-### Frontend (Vercel/Netlify)
-1. Push code to GitHub
-2. Import project
-3. Add environment variables
-4. Deploy
+### Books  `/api/books`
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/` | Public | List all books (search, genre, available, sort query params) |
+| POST | `/` | 🔐 User | Create book listing (validates title, author, description, price, genre, condition) |
+| GET | `/nearby` | 🔐 User | Books within `maxDistance` metres of user |
+| GET | `/user/my-books` | 🔐 User | Caller's own book listings |
+| GET | `/:id` | Public | Single book details |
+| PUT | `/:id` | 🔐 Owner | Update book |
+| DELETE | `/:id` | 🔐 Owner | Delete book (blocked if currently rented) |
+| POST | `/:id/wishlist` | 🔐 User | Add to wishlist / waitlist |
+| DELETE | `/:id/wishlist` | 🔐 User | Remove from wishlist / waitlist |
 
-### MongoDB Atlas
-1. Create cluster at https://cloud.mongodb.com
-2. Get connection string
-3. Update MONGODB_URI in backend
+### Transactions  `/api/transactions`
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/create-order` | 🔐 User | Create Razorpay order (validates bookId, rentalWeeks 1–52) |
+| POST | `/verify-payment` | 🔐 User | Verify Razorpay signature & mark payment complete |
+| POST | `/:id/confirm-exchange` | 🔐 Party | Owner or renter confirms book handover |
+| POST | `/:id/confirm-return` | 🔐 Party | Owner or renter confirms book return |
+| GET | `/my-rentals` | 🔐 User | Transactions where caller is renter |
+| GET | `/my-books-rented` | 🔐 User | Transactions where caller is owner |
+| GET | `/:id` | 🔐 Party | Single transaction (owner or renter only) |
 
-## Security Notes
+### Admin  `/api/admin`
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/dashboard` | 🔐 Admin | Platform stats (users, books, transactions, revenue) |
+| GET | `/users` | 🔐 Admin | All users |
+| DELETE | `/users/:id` | 🔐 Admin | Delete user |
 
-- Change JWT_SECRET in production
-- Use HTTPS in production
-- Never commit .env files
-- Use environment variables for all secrets
-- Enable CORS only for trusted origins
-- Use Razorpay webhooks for production
+---
 
-## Features to Add (Future)
+## 📸 Screenshots
 
-- Email notifications
-- Book ratings and reviews
-- Advanced search filters
-- User profiles with reputation system
-- Chat between users
-- Book condition photos upload
-- Late return penalties
-- Referral system
+> _Add screenshots after deployment._
 
-## License
+---
 
-MIT
+## 🔑 Environment Variables
 
-## Support
+### Backend  (`backend/.env`)
+```env
+PORT=5001
+MONGO_URI=mongodb://localhost:27017/bookshare
+JWT_SECRET=your_jwt_secret_here
 
-For issues and questions, please create an issue in the repository.
+# Razorpay (leave as "dummy" in dev to use mock orders)
+RAZORPAY_KEY_ID=dummy
+RAZORPAY_KEY_SECRET=dummy
+
+# Email OTP (leave blank in dev — OTP is logged to console)
+EMAIL_USER=your_gmail@gmail.com
+EMAIL_PASS=your_gmail_app_password
+
+# Payment verification bypass — ONLY for dev, NEVER expose to client
+# NODE_ENV=development
+# SKIP_PAYMENT_VERIFY=true
+```
+
+### Frontend  (`frontend/.env`)
+```env
+REACT_APP_API_URL=http://localhost:5001/api
+```
+
+### Frontend production  (`frontend/.env.production`)
+```env
+REACT_APP_API_URL=https://your-backend-url.onrender.com/api
+```
