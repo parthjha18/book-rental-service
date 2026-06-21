@@ -1,3 +1,4 @@
+# Ignored files for Docker build
 node_modules
 npm-debug.log
 .env
